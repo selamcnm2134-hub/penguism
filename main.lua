@@ -9,37 +9,12 @@ local Toggles = Library.Toggles
 
 --// WINDOW
 local Window = Library:CreateWindow({
-    Title = "v1.4",
-    Footer = "v1.4 - Sniper Mark Edition",
+    Title = "Penguizm Hub | Pro Sniper",
+    Footer = "v1.4",
     Icon = 95816097006870,
     NotifySide = "Right",
     ShowCustomCursor = true,
 })
-
-local function SetLogo()
-    local pGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    local hubGui = pGui:WaitForChild("PenguizmHub", 5)
-    if hubGui then
-        local ui = hubGui:WaitForChild("UI", 5)
-        local titleBar = ui:WaitForChild("TitleBar", 5)
-        local titleLabel = titleBar:WaitForChild("TitleLabel", 5)
-        if titleLabel then
-            local logo = Instance.new("ImageLabel")
-            logo.Name = "PenguizmLogo"
-            logo.Image = "rbxassetid://12543411425" -- rbxassetid://12543411425 logo.
-            logo.Size = UDim2.new(0, 30, 0, 30)
-            logo.Position = UDim2.new(0, 5, 0.5, -15) -- Logo label'in hemen soluna yerleştirildi.
-            logo.BackgroundTransparency = 1
-            logo.Parent = titleBar
-            titleLabel.Position = UDim2.new(0, 40, 0, 0) -- Label sağa kaydırıldı.
-            titleLabel.Text = "v1.4" -- Yazı sürüm etiketiyle güncellendi.
-            titleLabel.TextXAlignment = Enum.TextXAlignment.Left -- Yazı sola hizalandı.
-            titleLabel.TextYAlignment = Enum.TextYAlignment.Center -- Yazı dikey olarak ortalandı.
-            titleLabel.Font = Enum.Font.SourceSansBold -- Yazı tipi kalın yapıldı.
-        end
-    end
-end
-task.spawn(SetLogo)
 
 --// TABS
 local Tabs = {
@@ -93,31 +68,30 @@ AimBox:AddDropdown("Hitbox", {
 })
 
 local MoveBox = Tabs.Main:AddRightGroupbox("Movement")
-MoveBox:AddToggle("Fly", {Text="Manual Fly (WASD)"})
+MoveBox:AddToggle("Fly", {Text="Fly"})
 MoveBox:AddToggle("Noclip", {Text="Noclip"})
-MoveBox:AddToggle("Bhop", {Text="Fixed Bunny Hop"})
-MoveBox:AddToggle("InfJump", {Text="Fixed Infinite Jump"})
+MoveBox:AddToggle("Bhop", {Text="Bunny Hop"})
+MoveBox:AddToggle("InfJump", {Text="Infinite Jump"})
 MoveBox:AddToggle("Freecam", {Text="Free View"})
 MoveBox:AddToggle("AntiAFK", {Text="Anti AFK"})
 
-MoveBox:AddSlider("Speed", {Text="Fly Speed", Default=16, Min=16, Max=200})
+MoveBox:AddSlider("Speed", {Text="Speed", Default=16, Min=16, Max=200})
 MoveBox:AddSlider("Jump", {Text="Jump Power", Default=50, Min=50, Max=200})
 
 local RageBox = Tabs.Main:AddRightGroupbox("Rage")
-RageBox:AddToggle("KillAll", {Text="Manual Kill All (Manual Fly compatible)"})
+RageBox:AddToggle("KillAll", {Text="Kill All (Manual Fly)"})
 RageBox:AddToggle("AutoFire", {Text="Auto Fire"})
 RageBox:AddToggle("NoRecoil", {Text="No Recoil"})
 RageBox:AddToggle("NoSpread", {Text="No Spread"})
-RageBox:AddToggle("NoScope", {Text="No Scope Overlay"}) -- Rage NoScope removed in favor of Sniper NoScope
 RageBox:AddToggle("InfAmmo", {Text="Unlimited Ammo"})
 RageBox:AddToggle("InstantReload", {Text="Instant Reload"})
-RageBox:AddToggle("Spinbot", {Text="Fixed Spinbot"})
+RageBox:AddToggle("Spinbot", {Text="Spinbot"})
 RageBox:AddToggle("AntiAim", {Text="Anti Aim"})
 
 --// ================= SNIPER TAB =================
 local SniperBox = Tabs.Sniper:AddLeftGroupbox("Sniper Settings")
 
-SniperBox:AddToggle("SniperNoScope", {Text="Fixed Sniper No Scope Overlay"})
+SniperBox:AddToggle("SniperNoScope", {Text="No Scope Overlay"})
 SniperBox:AddToggle("CamLock", {Text="Camera Lock (Instant)"}):AddKeyPicker("CamLockBind", {
     Default = "C",
     SyncToggleState = false,
@@ -126,46 +100,6 @@ SniperBox:AddToggle("CamLock", {Text="Camera Lock (Instant)"}):AddKeyPicker("Cam
 })
 SniperBox:AddToggle("SniperKillAll", {Text="Sniper Kill All (Furthest First)"})
 
--- [ SNIPER NO SCOPE DÜZELTME ]
-local originalGuiStates = {}
-
-local function ToggleSniperScope(value)
-    if value then
-        local pGui = game.Players.LocalPlayer:WaitForChild("PlayerGui", 5)
-        if pGui then
-            for _, gui in pairs(pGui:GetDescendants()) do
-                if gui:IsA("ImageLabel") or gui:IsA("ImageButton") then
-                    local name = gui.Name:lower()
-                    if name:match("scope") or name:match("sniper") or name:match("reticle") or name:match("crosshair") then
-                        originalGuiStates[gui] = {
-                            ImageTransparency = gui.ImageTransparency,
-                            BackgroundTransparency = gui.BackgroundTransparency
-                        }
-                        gui.ImageTransparency = 1
-                        gui.BackgroundTransparency = 1
-                    end
-                end
-            end
-        end
-    else
-        for gui, state in pairs(originalGuiStates) do
-            if gui and gui.Parent then -- Öğenin hala var olup olmadığını kontrol edin.
-                gui.ImageTransparency = state.ImageTransparency
-                gui.BackgroundTransparency = state.BackgroundTransparency
-            end
-        end
-        originalGuiStates = {}
-    end
-end
-
-Toggles.SniperNoScope:OnChanged(ToggleSniperScope)
-
-local function OnCharacterAdded()
-    if Toggles.SniperNoScope.Value then
-        ToggleSniperScope(true)
-    end
-end
-game.Players.LocalPlayer.CharacterAdded:Connect(OnCharacterAdded)
 
 --// ================= VISUALS =================
 
@@ -209,55 +143,39 @@ MiscBox:AddButton("Rejoin", function()
     game:GetService("TeleportService"):Teleport(game.PlaceId)
 end)
 
-local SkinBox = Tabs.Misc:AddRightGroupbox("Fixed Skin Changer")
+local SkinBox = Tabs.Misc:AddRightGroupbox("Skin Changer")
 SkinBox:AddInput("SkinID", {
     Default = "12345678",
     Numeric = true,
     Finished = true,
     Text = "Custom Texture ID",
 })
-SkinBox:AddButton("Apply Skin to All", function()
+SkinBox:AddButton("Apply Skin to Tool", function()
     local targetID = Options.SkinID.Value
     local character = game.Players.LocalPlayer.Character
     if character then
-        local function ApplySkinToInstance(instance)
-            if instance:IsA("MeshPart") or instance:IsA("SpecialMesh") then
-                instance.TextureID = "rbxassetid://" .. targetID
-            elseif instance:IsA("Part") or instance:IsA("UnionOperation") then
-                local tex = instance:FindFirstChildOfClass("Texture") or Instance.new("Texture", instance)
-                tex.Texture = "rbxassetid://" .. targetID
-                tex.Face = Enum.NormalId.Front
-            end
-        end
-        
-        -- Karakterin aksesuarlarını değiştir
-        for _, accessory in pairs(character:GetDescendants()) do
-            if accessory:IsA("Accessory") then
-                ApplySkinToInstance(accessory.Handle)
-            end
-        end
-        
-        -- Karakterin zırhlarını ve giysilerini değiştir
-        for _, giysi in pairs(character:GetDescendants()) do
-            if giysi:IsA("Shirt") or giysi:IsA("Pants") then
-                ApplySkinToInstance(giysi)
-            end
-        end
-        
-        -- Elindeki silahı değiştir
         local tool = character:FindFirstChildOfClass("Tool")
         if tool then
-            ApplySkinToInstance(tool.Handle)
+            for _, part in pairs(tool:GetDescendants()) do
+                if part:IsA("MeshPart") or part:IsA("SpecialMesh") then
+                    part.TextureID = "rbxassetid://" .. targetID
+                elseif part:IsA("Part") or part:IsA("UnionOperation") then
+                    local tex = part:FindFirstChildOfClass("Texture") or Instance.new("Texture", part)
+                    tex.Texture = "rbxassetid://" .. targetID
+                    tex.Face = Enum.NormalId.Front
+                end
+            end
+            Library:Notify("Skin Uygulandı: " .. targetID)
+        else
+            Library:Notify("Hata: Elinde bir silah olmalı!")
         end
-        
-        Library:Notify("Skin Uygulandı: " .. targetID)
     end
 end)
-SkinBox:AddToggle("RainbowSkin", {Text = "Fixed Rainbow Tool (RGB)"})
+SkinBox:AddToggle("RainbowSkin", {Text = "Rainbow Tool (RGB)"})
 
 --// ================= UI SETTINGS =================
 
-local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu Settings")
+local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
 MenuGroup:AddToggle("KeybindMenuOpen", {
     Default = Library.KeybindFrame.Visible,
     Text = "Open Keybind Menu",
@@ -279,7 +197,7 @@ SaveManager:BuildConfigSection(Tabs["UI Settings"])
 ThemeManager:ApplyToTab(Tabs["UI Settings"])
 SaveManager:LoadAutoloadConfig()
 
---// ================= ENGINE V5.6 =================
+--// ================= ENGINE V5.5 =================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -392,31 +310,12 @@ for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then CreateESP(p)
 Players.PlayerAdded:Connect(CreateESP)
 Players.PlayerRemoving:Connect(function(p) if ESP_Objects[p] then HideESP(ESP_Objects[p]); ESP_Objects[p] = nil end end)
 
--- [ FIXED INFINITE JUMP DÜZELTME ]
-local function ToggleInfJump(value)
-    local function OnJumpRequest()
-        if Toggles.InfJump.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.5, 0)
-        end
+-- [ FIXED INFINITE JUMP ]
+UserInputService.JumpRequest:Connect(function()
+    if Toggles.InfJump.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
     end
-    if value then
-        self.jumpRequest = game:GetService("UserInputService").JumpRequest:Connect(OnJumpRequest)
-    else
-        if self.jumpRequest then
-            self.jumpRequest:Disconnect()
-            self.jumpRequest = nil
-        end
-    end
-end
-
-Toggles.InfJump:OnChanged(ToggleInfJump)
-
-local function OnCharacterAddedJump()
-    if Toggles.InfJump.Value then
-        ToggleInfJump(true)
-    end
-end
-game.Players.LocalPlayer.CharacterAdded:Connect(OnCharacterAddedJump)
+end)
 
 -- [ NOCLIP ]
 RunService.Stepped:Connect(function()
@@ -449,29 +348,28 @@ end)
 -- [ CORE LOOP ]
 RunService.RenderStepped:Connect(function()
     local target = GetTarget()
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-
+    
     -- FOV Update
     FOVCircle.Position = UserInputService:GetMouseLocation()
     FOVCircle.Radius = Options.FOV.Value
     FOVCircle.Visible = Toggles.ShowFOV.Value
 
-    -- FIXED BUNNY HOP DÜZELTME
-    if Toggles.Bhop.Value and hum then
+    -- FIXED BUNNY HOP
+    if Toggles.Bhop.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum.MoveDirection.Magnitude > 0 and hum.FloorMaterial ~= Enum.Material.Air then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            hum.Jump = true
         end
     end
 
-    -- FIXED SPINBOT DÜZELTME
-    if Toggles.Spinbot.Value and hrp then
-        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(90), 0)
+    -- FIXED SPINBOT
+    if Toggles.Spinbot.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(45), 0)
     end
 
     -- FLY (UÇMA) MANTIĞI
-    if Toggles.Fly.Value and hrp then
+    if Toggles.Fly.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
         local speed = Options.Speed.Value / 10
         local camCFrame = Camera.CFrame
         hrp.Velocity = Vector3.zero 
@@ -485,20 +383,18 @@ RunService.RenderStepped:Connect(function()
         if moveDir.Magnitude > 0 then hrp.CFrame = hrp.CFrame + (moveDir.Unit * speed) end
     end
 
-    -- KILL ALL MANTIĞI (RAGE) - MANUAL FLY COMPATIBLE
+    -- KILL ALL MANTIĞI (RAGE)
     if Toggles.KillAll.Value and target then
-        -- Kamerayı hedefe kilitle
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-        -- Otomatik ateş et
         if mouse1click then mouse1click() end
     end
 
     -- SNIPER KILL ALL (EN UZAK OYUNCU)
-    if Toggles.SniperKillAll.Value and hrp then
+    if Toggles.SniperKillAll.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local furthestTarget = GetFurthestTarget()
         if furthestTarget then
             -- Adamın biraz arkasına veya üstüne ışınlan
-            hrp.CFrame = furthestTarget.CFrame * CFrame.new(0, 3, 5)
+            LocalPlayer.Character.HumanoidRootPart.CFrame = furthestTarget.CFrame * CFrame.new(0, 3, 5)
             -- Kamerayı direk adama kilitle
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, furthestTarget.Position)
             -- Ateş et
@@ -514,14 +410,27 @@ RunService.RenderStepped:Connect(function()
     end
 
     -- NO RECOIL / NO SPREAD
-    if (Toggles.NoRecoil.Value or Toggles.NoSpread.Value) and char then
-        local tool = char:FindFirstChildOfClass("Tool")
+    if (Toggles.NoRecoil.Value or Toggles.NoSpread.Value) and LocalPlayer.Character then
+        local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
         if tool then
             for _, v in pairs(tool:GetDescendants()) do
                 if v:IsA("NumberValue") or v:IsA("IntValue") then
                     local name = v.Name:lower()
                     if Toggles.NoRecoil.Value and (name:match("recoil") or name:match("kick") or name:match("camshake")) then v.Value = 0 end
                     if Toggles.NoSpread.Value and (name:match("spread") or name:match("accuracy") or name:match("bloom")) then v.Value = 0 end
+                end
+            end
+        end
+    end
+
+    -- SNIPER NO SCOPE
+    if Toggles.SniperNoScope.Value and LocalPlayer:FindFirstChild("PlayerGui") then
+        for _, gui in pairs(LocalPlayer.PlayerGui:GetDescendants()) do
+            if gui:IsA("ImageLabel") or gui:IsA("ImageButton") then
+                local name = gui.Name:lower()
+                if name:match("scope") or name:match("sniper") or name:match("reticle") or name:match("crosshair") then
+                    gui.ImageTransparency = 1
+                    gui.BackgroundTransparency = 1
                 end
             end
         end
@@ -604,4 +513,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-Library:Notify({Title = "Penguizm Hub", Description = "Engine V5.6 | Sniper Mark Edition & All Fixed!", Time = 5})
+Library:Notify({Title = "Penguizm Hub", Description = "Engine V5.5 | Sniper Update & Fixes Applied!", Time = 5})
