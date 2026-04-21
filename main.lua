@@ -10,7 +10,7 @@ local Toggles = Library.Toggles
 --// WINDOW
 local Window = Library:CreateWindow({
     Title = "Penguizm Hub | Pro Sniper",
-    Footer = "v1.4",
+    Footer = "v1.5",
     Icon = 95816097006870,
     NotifySide = "Right",
     ShowCustomCursor = true,
@@ -23,6 +23,7 @@ local Tabs = {
     Visuals = Window:AddTab("Visuals", "eye"),
     World = Window:AddTab("World", "globe"),
     Misc = Window:AddTab("Misc", "settings"),
+    Special = Window:AddTab("Special", "star"), -- YENİ SEKME
     ["UI Settings"] = Window:AddTab("UI Settings", "settings"),
 }
 
@@ -135,7 +136,7 @@ local MiscBox = Tabs.Misc:AddLeftGroupbox("Misc")
 MiscBox:AddToggle("AutoRejoin", {Text="Auto Rejoin"})
 MiscBox:AddToggle("HitSound", {Text="Hit Sound"})
 
-MiscBox:AddToggle("CustomCrosshair", {Text="Custom Crosshair"})
+MiscBox:AddToggle("CustomCrosshair", {Text="Custom Crosshair (Rotating X)"})
 MiscBox:AddSlider("CrosshairSize", {Text="Crosshair Size", Default=40, Min=10, Max=150})
 MiscBox:AddSlider("CrosshairSpin", {Text="Spin Speed", Default=3, Min=0, Max=20})
 
@@ -172,6 +173,64 @@ SkinBox:AddButton("Apply Skin to Tool", function()
     end
 end)
 SkinBox:AddToggle("RainbowSkin", {Text = "Rainbow Tool (RGB)"})
+
+--// ================= SPECIAL (YENİ) =================
+
+local SoundBox = Tabs.Special:AddLeftGroupbox("Custom Sounds")
+SoundBox:AddToggle("EnableTriggerSound", {Text = "Triggerbot Shoot Sound"})
+SoundBox:AddInput("TriggerSoundID", {
+    Default = "1347140027", -- Default Rust headshot/hit sound
+    Numeric = true,
+    Finished = true,
+    Text = "Trigger Sound ID",
+})
+
+SoundBox:AddToggle("EnableKillSound", {Text = "Kill Sound"})
+SoundBox:AddInput("KillSoundID", {
+    Default = "1347140027", 
+    Numeric = true,
+    Finished = true,
+    Text = "Kill Sound ID",
+})
+
+local CustomSkyBox = Tabs.Special:AddRightGroupbox("Custom Skybox")
+CustomSkyBox:AddInput("CustomSkyID", {
+    Default = "143772594", 
+    Numeric = true,
+    Finished = true,
+    Text = "Skybox ID",
+})
+CustomSkyBox:AddButton("Apply Custom Sky", function()
+    local lighting = game:GetService("Lighting")
+    -- Eski gökyüzlerini sil
+    for _, v in pairs(lighting:GetChildren()) do
+        if v:IsA("Sky") then
+            v:Destroy()
+        end
+    end
+    -- Yeni gökyüzünü oluştur
+    local newSky = Instance.new("Sky")
+    newSky.Name = "PenguizmSky"
+    local id = "rbxassetid://" .. Options.CustomSkyID.Value
+    newSky.SkyboxBk = id
+    newSky.SkyboxDn = id
+    newSky.SkyboxFt = id
+    newSky.SkyboxLf = id
+    newSky.SkyboxRt = id
+    newSky.SkyboxUp = id
+    newSky.Parent = lighting
+    Library:Notify("Custom Skybox Uygulandı!")
+end)
+
+CustomSkyBox:AddButton("Remove Custom Sky", function()
+    local lighting = game:GetService("Lighting")
+    for _, v in pairs(lighting:GetChildren()) do
+        if v:IsA("Sky") then
+            v:Destroy()
+        end
+    end
+    Library:Notify("Custom Skybox Kaldırıldı!")
+end)
 
 --// ================= UI SETTINGS =================
 
@@ -216,7 +275,7 @@ FOVCircle.Filled = false
 FOVCircle.NumSides = 60
 FOVCircle.Visible = false
 
--- [ CUSTOM CROSSHAIR SETUP ]
+-- [ CUSTOM CROSSHAIR SETUP (FIXED) ]
 local CrosshairGui = Instance.new("ScreenGui")
 CrosshairGui.Name = "PenguizmCrosshair"
 CrosshairGui.IgnoreGuiInset = true
@@ -230,8 +289,46 @@ CrosshairImage.Parent = CrosshairGui
 CrosshairImage.BackgroundTransparency = 1
 CrosshairImage.AnchorPoint = Vector2.new(0.5, 0.5)
 CrosshairImage.Position = UDim2.new(0.5, 0, 0.5, 0)
-CrosshairImage.Image = "rbxassetid://5830306048" 
+CrosshairImage.Image = "rbxassetid://3145463220" -- Düzgün merkezli X ikonu ID'si
 CrosshairImage.Visible = false
+
+-- [ AUDIO UTILS ]
+local function PlayCustomSound(id)
+    local snd = Instance.new("Sound")
+    snd.SoundId = "rbxassetid://" .. id
+    snd.Volume = 2
+    snd.Parent = game.Workspace
+    snd:Play()
+    game.Debris:AddItem(snd, 3)
+end
+
+-- [ KILL SOUND LOGIC ]
+local function TrackPlayerDeath(player)
+    player.CharacterAdded:Connect(function(char)
+        local hum = char:WaitForChild("Humanoid", 5)
+        if hum then
+            hum.Died:Connect(function()
+                if Toggles.EnableKillSound and Toggles.EnableKillSound.Value then
+                    PlayCustomSound(Options.KillSoundID.Value)
+                end
+            end)
+        end
+    end)
+    -- Zaten oyundaysa direkt bağla
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.Died:Connect(function()
+            if Toggles.EnableKillSound and Toggles.EnableKillSound.Value then
+                PlayCustomSound(Options.KillSoundID.Value)
+            end
+        end)
+    end
+end
+
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then TrackPlayerDeath(p) end
+end
+Players.PlayerAdded:Connect(TrackPlayerDeath)
+
 
 -- [ UTILS ]
 local function GetTarget()
@@ -367,7 +464,7 @@ RunService.RenderStepped:Connect(function()
         LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(45), 0)
     end
 
-    -- FLY (UÇMA) MANTIĞI
+    -- FLY MANTIĞI
     if Toggles.Fly.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = LocalPlayer.Character.HumanoidRootPart
         local speed = Options.Speed.Value / 10
@@ -393,11 +490,8 @@ RunService.RenderStepped:Connect(function()
     if Toggles.SniperKillAll.Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local furthestTarget = GetFurthestTarget()
         if furthestTarget then
-            -- Adamın biraz arkasına veya üstüne ışınlan
             LocalPlayer.Character.HumanoidRootPart.CFrame = furthestTarget.CFrame * CFrame.new(0, 3, 5)
-            -- Kamerayı direk adama kilitle
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, furthestTarget.Position)
-            -- Ateş et
             if mouse1click then mouse1click() end
         end
     end
@@ -405,7 +499,6 @@ RunService.RenderStepped:Connect(function()
     -- SNIPER CAMERA LOCK (INSTANT)
     local camLockPressed = Options.CamLockBind:GetState()
     if Toggles.CamLock.Value and camLockPressed and target then
-        -- Saniyesinde şak diye kilitlenir, smoothing yoktur.
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
     end
 
@@ -436,28 +529,35 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Normal Aimbot (Smooth)
+    -- BUG FIX: Normal Aimbot (Smooth) Sapıtma Engellendi
     local aimKeyPressed = Options.AimBind:GetState()
     if Toggles.AimEnabled.Value and aimKeyPressed and target and not Toggles.KillAll.Value and not Toggles.CamLock.Value then
         local pos = Camera:WorldToViewportPoint(target.Position)
-        local s = (101 - Options.Smooth.Value) / 10
+        -- Matematiksel hatayı düzelttik, değer düştükçe hızlı, yükseldikçe daha yumuşak kitlenir
+        local s = math.max(1, Options.Smooth.Value)
         if mousemoverel then mousemoverel((pos.X - UserInputService:GetMouseLocation().X)/s, (pos.Y - UserInputService:GetMouseLocation().Y)/s) end
     end
 
-    -- Triggerbot
+    -- Triggerbot + Ses Efekti (YENİ)
     local triggerKeyPressed = Options.TriggerBind:GetState()
     if Toggles.Trigger.Value and triggerKeyPressed and not Toggles.KillAll.Value and not Toggles.SniperKillAll.Value then
         local hitTarget = Mouse.Target
         if hitTarget and hitTarget.Parent and hitTarget.Parent:FindFirstChild("Humanoid") then
             local targetPlayer = Players:GetPlayerFromCharacter(hitTarget.Parent)
             if targetPlayer and targetPlayer ~= LocalPlayer and targetPlayer.Character.Humanoid.Health > 0 then
-                if mouse1click then mouse1click() end
+                if mouse1click then 
+                    mouse1click()
+                    -- Triggerbot tetiklendiğinde ses çalma
+                    if Toggles.EnableTriggerSound and Toggles.EnableTriggerSound.Value then
+                        PlayCustomSound(Options.TriggerSoundID.Value)
+                    end
+                end
                 task.wait(Options.TriggerDelay.Value / 1000)
             end
         end
     end
 
-    -- Custom Crosshair Logic
+    -- Custom Crosshair Logic (FIXED)
     if Toggles.CustomCrosshair.Value then
         UserInputService.MouseIconEnabled = false
         CrosshairImage.Visible = true
@@ -513,4 +613,4 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-Library:Notify({Title = "Penguizm Hub", Description = "Engine V5.5 | Sniper Update & Fixes Applied!", Time = 5})
+Library:Notify({Title = "Penguizm Hub", Description = "Engine V5.5 | Special Settings Added & Fixed!", Time = 5})
