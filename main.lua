@@ -12,7 +12,7 @@ local humanoid_3 = nil -- Humanoid kontrolü için eklendi
 -- CAMERA FOV LOCK (80)
 ----------------------------------------------------
 local camera_3 = workspace.CurrentCamera
-local TARGET_FOV_3 = 120
+local TARGET_FOV_3 = 70
 camera_3.FieldOfView = TARGET_FOV_3
 
 RunService_3.RenderStepped:Connect(function()
